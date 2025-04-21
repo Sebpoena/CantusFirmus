@@ -1,0 +1,88 @@
+#cantus firmus shit
+import random
+
+class Scale:
+  def __init__(self, base):
+    self.base = base
+    self.scale = [i for i in range(120) if (i % 12) in base]
+
+
+def leapDirection(prev2, prev):
+  if prev2 - prev > 0:
+    return 1
+  else:
+    return -1
+
+def isLeap(prev2, prev):
+  if abs(prev2 - prev) >= 3:
+    return True
+  return False
+
+def possibleNotes(position, melody, scale):
+  #will return the possible notes, taking leaps into account and prioritising stepwise motion
+  if position == 0:
+    return [60 + scale.scale[0]]
+  prev = melody[position - 1]
+  acceptableLeaps = [3, 4, 7, 12, -3, -4, -7, -12]
+  allLeaps = [prev+i for i in acceptableLeaps if prev+i in scale.scale]
+  basePossibilities = [i for i in range((prev-7), (prev+7)) if i in scale.scale] + allLeaps
+  random.shuffle(basePossibilities)
+  if position == 1:
+    return basePossibilities
+  prev2 = melody[position - 2]
+  if (position == 2 and isLeap(prev2, prev)) or isLeap(prev2, prev):
+    direction = leapDirection(prev2, prev)
+    possibilities = [i for i in range(prev, prev+(3*direction), (1*direction)) if i in scale.scale]
+    return possibilities
+  else:
+    return basePossibilities
+  prev3 = melody[position - 3]
+  if isLeap(prev3, prev2):
+    direction = leapDirection(prev3, prev)
+    possibilities = [i for i in range(prev, prev+(3*direction), (1*direction)) if i in scale.scale]
+  else:
+    return basePossibilities
+  print('broken')
+
+"""
+def possibleNotes(position, melody, scale):
+  if position == 0:
+    return [60 + scale.scale[0]]
+  prev = melody[position - 1]
+  acceptableLeaps = [3, 4, 7, 12]
+  basePossibilities = [i for i in range((prev-7), (prev+7)) if i in scale.scale] + acceptableLeaps
+  random.shuffle(basePossibilities)
+  if position == 1:
+    return basePossibilities
+  previousNotes = melody[-1:-5:-1]
+"""
+
+def isValid(position, melody, note):
+  if position == 0:
+    return True
+  prev = melody[position - 1]
+  if (position == 1 and note == prev) or note in [prev, melody[position - 2]]:
+    return False
+  elif position > 2 and note in [prev, melody[position - 2], melody[position - 3]]:
+    return False 
+  if note in range(melody[0]-5, 67):
+    return True
+  else:
+    return False
+
+def generate(position, melody, scale, length):
+  if position == length:
+    return melody
+  for note in possibleNotes(position, melody, scale):
+    if isValid(position, melody, note):
+      melody.append(note)
+      result = generate((position+1), melody, scale, length)
+      if result != None:
+        return result
+      melody.pop()
+  return None
+
+cmaj = Scale([0, 2, 4, 5, 7, 9, 11])
+
+print(generate(0, [], cmaj, 16))
+#def cadence()
